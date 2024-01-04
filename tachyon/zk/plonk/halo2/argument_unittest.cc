@@ -56,8 +56,8 @@ class ArgumentTest : public halo2::ProverTest {
     argument_ = Argument<PCS>::Create(
         prover_.get(), num_circuits_, &expected_fixed_columns_,
         &expected_fixed_polys_, std::move(advice_columns_vec),
-        std::move(advice_blinds_vec), std::move(instance_columns_vec),
-        std::move(challenges));
+        std::move(advice_blinds_vec), std::move(challenges),
+        std::move(instance_columns_vec));
   }
 
  protected:
