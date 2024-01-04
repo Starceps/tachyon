@@ -11,6 +11,7 @@
 
 #include "gtest/gtest_prod.h"
 
+#include "tachyon/crypto/commitments/polynomial_openings.h"
 #include "tachyon/zk/base/entities/prover_base.h"
 #include "tachyon/zk/base/prover_query.h"
 #include "tachyon/zk/expressions/evaluator/simple_evaluator.h"
@@ -18,6 +19,7 @@
 #include "tachyon/zk/lookup/lookup_committed.h"
 #include "tachyon/zk/lookup/lookup_evaluated.h"
 #include "tachyon/zk/lookup/lookup_permuted.h"
+#include "tachyon/zk/plonk/halo2/point_set.h"
 
 namespace tachyon::zk {
 
@@ -41,9 +43,9 @@ class LookupArgumentRunner {
       ProverBase<PCS>* prover, LookupCommitted<Poly>&& committed, const F& x);
 
   template <typename PCS, typename F>
-  static std::vector<ProverQuery<PCS>> OpenEvaluated(
+  static std::vector<crypto::PolynomialOpening<Poly>> OpenEvaluated(
       const ProverBase<PCS>* prover, const LookupEvaluated<Poly>& evaluated,
-      const F& x);
+      const F& x, crypto::PointSet<F>& points);
 
  private:
   FRIEND_TEST(LookupArgumentRunnerTest, ComputePermutationProduct);
