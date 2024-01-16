@@ -520,6 +520,31 @@ TEST_F(SimpleLookupV1CircuitTest, LoadProvingKey) {
   }
 }
 
+TEST_F(SimpleLookupV1CircuitTest, CreateProof) {
+  size_t n = 32;
+  CHECK(prover_->pcs().UnsafeSetup(n, F(2)));
+  prover_->set_domain(Domain::Create(n));
+
+  SimpleLookupCircuit<F, kBits, V1FloorPlanner> circuit(4);
+  std::vector<SimpleLookupCircuit<F, kBits, V1FloorPlanner>> circuits = {
+      std::move(circuit)};
+
+  std::vector<std::vector<F>> instance_columns;
+  std::vector<std::vector<std::vector<F>>> instance_columns_vec = {
+      std::move(instance_columns)};
+
+  ProvingKey<PCS> pkey;
+  ASSERT_TRUE(pkey.Load(prover_.get(), circuit));
+  ASSERT_TRUE(
+      prover_->CreateProof(pkey, std::move(instance_columns_vec), circuits));
+
+  std::vector<uint8_t> proof = prover_->GetWriter()->buffer().owned_buffer();
+  std::vector<uint8_t> expected_proof(std::begin(kExpectedProof),
+                                      std::end(kExpectedProof));
+  ASSERT_EQ(proof.size(), 640);
+  ASSERT_EQ(proof, expected_proof);
+}
+
 TEST_F(SimpleLookupV1CircuitTest, Verify) {
   size_t n = 32;
   CHECK(prover_->pcs().UnsafeSetup(n, F(2)));

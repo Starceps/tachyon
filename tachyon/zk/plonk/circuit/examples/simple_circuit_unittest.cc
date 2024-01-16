@@ -631,6 +631,36 @@ TEST_F(SimpleCircuitTest, LoadProvingKey) {
   }
 }
 
+TEST_F(SimpleCircuitTest, CreateProof) {
+  size_t n = 16;
+  CHECK(prover_->pcs().UnsafeSetup(n, F(2)));
+  prover_->set_domain(Domain::Create(n));
+
+  F constant(7);
+  F a(2);
+  F b(3);
+  SimpleCircuit<F, SimpleFloorPlanner> circuit(constant, a, b);
+  std::vector<SimpleCircuit<F, SimpleFloorPlanner>> circuits = {
+      std::move(circuit)};
+
+  F c = constant * a.Square() * b.Square();
+  std::vector<F> instance_column = {std::move(c)};
+  std::vector<std::vector<F>> instance_columns = {std::move(instance_column)};
+  std::vector<std::vector<std::vector<F>>> instance_columns_vec = {
+      std::move(instance_columns)};
+
+  ProvingKey<PCS> pkey;
+  ASSERT_TRUE(pkey.Load(prover_.get(), circuit));
+  ASSERT_TRUE(
+      prover_->CreateProof(pkey, std::move(instance_columns_vec), circuits));
+
+  std::vector<uint8_t> proof = prover_->GetWriter()->buffer().owned_buffer();
+  std::vector<uint8_t> expected_proof(std::begin(kExpectedProof),
+                                      std::end(kExpectedProof));
+  ASSERT_EQ(proof.size(), 1024);
+  ASSERT_EQ(proof, expected_proof);
+}
+
 TEST_F(SimpleCircuitTest, Verify) {
   size_t n = 16;
   CHECK(prover_->pcs().UnsafeSetup(n, F(2)));
@@ -714,7 +744,8 @@ TEST_F(SimpleCircuitTest, Verify) {
   {
     expected_vanishing_random_poly_commitment = CreateCommitment(
         {"0x0000000000000000000000000000000000000000000000000000000000000001",
-         "0x0000000000000000000000000000000000000000000000000000000000000002"});
+         "0x000000000000000000000000000000000000000000000000000000000000000"
+         "2"});
   }
   EXPECT_EQ(proof.vanishing_random_poly_commitment,
             expected_vanishing_random_poly_commitment);
@@ -727,9 +758,11 @@ TEST_F(SimpleCircuitTest, Verify) {
   {
     std::vector<Point> points = {
         {"0x2157c5e9888d3770a99534af98e5256e87a8156013477212abaf2dcb61267cc1",
-         "0x2b04d3cec50250e35b5919da1cfe8142db0a636c0f29c6427fe713f52c1fff60"},
+         "0x2b04d3cec50250e35b5919da1cfe8142db0a636c0f29c6427fe713f52c1fff6"
+         "0"},
         {"0x1f74e7de13dea2916e273fdd6dc8fb6b439880af6f5a51f43c1519fff52df80c",
-         "0x1fd85823b8d30be9fdde823da1f8c4c876bb874a236050c3d04032999ac56eb7"},
+         "0x1fd85823b8d30be9fdde823da1f8c4c876bb874a236050c3d04032999ac56eb"
+         "7"},
     };
     expected_vanishing_h_poly_commitments = CreateCommitments(points);
   }

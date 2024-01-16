@@ -630,6 +630,35 @@ TEST_F(SimpleV1CircuitTest, LoadProvingKey) {
   }
 }
 
+TEST_F(SimpleV1CircuitTest, CreateProof) {
+  size_t n = 16;
+  CHECK(prover_->pcs().UnsafeSetup(n, F(2)));
+  prover_->set_domain(Domain::Create(n));
+
+  F constant(7);
+  F a(2);
+  F b(3);
+  SimpleCircuit<F, V1FloorPlanner> circuit(constant, a, b);
+  std::vector<SimpleCircuit<F, V1FloorPlanner>> circuits = {std::move(circuit)};
+
+  F c = constant * a.Square() * b.Square();
+  std::vector<F> instance_column = {std::move(c)};
+  std::vector<std::vector<F>> instance_columns = {std::move(instance_column)};
+  std::vector<std::vector<std::vector<F>>> instance_columns_vec = {
+      std::move(instance_columns)};
+
+  ProvingKey<PCS> pkey;
+  ASSERT_TRUE(pkey.Load(prover_.get(), circuit));
+  ASSERT_TRUE(
+      prover_->CreateProof(pkey, std::move(instance_columns_vec), circuits));
+
+  std::vector<uint8_t> proof = prover_->GetWriter()->buffer().owned_buffer();
+  std::vector<uint8_t> expected_proof(std::begin(kExpectedProof),
+                                      std::end(kExpectedProof));
+  ASSERT_EQ(proof.size(), 1024);
+  ASSERT_EQ(proof, expected_proof);
+}
+
 TEST_F(SimpleV1CircuitTest, Verify) {
   size_t n = 16;
   CHECK(prover_->pcs().UnsafeSetup(n, F(2)));
