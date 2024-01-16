@@ -6,6 +6,7 @@ tachyon_cc_library(
     name = "argument",
     hdrs = ["argument.h"],
     deps = [
+        ":synthesizer",
         "//tachyon/base:logging",
         "//tachyon/base/containers:container_util",
         "//tachyon/zk/base/entities:prover_base",
@@ -240,5 +241,6 @@ tachyon_cc_unittest(
         "//tachyon/base/containers:container_util",
         "//tachyon/zk/plonk/circuit/examples:simple_circuit",
         "//tachyon/zk/plonk/circuit/floor_planner:simple_floor_planner",
+        "//tachyon/zk/plonk/keys:proving_key",
     ],
 )
