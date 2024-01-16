@@ -29,9 +29,9 @@ tachyon_cc_library(
     name = "proving_key",
     hdrs = ["proving_key.h"],
     deps = [
-        ":verifying_key",
         "//tachyon/base:parallelize",
         "//tachyon/zk/base/entities:prover_base",
+        "//tachyon/zk/plonk/halo2:pinned_verifying_key",
         "//tachyon/zk/plonk/permutation:permutation_proving_key",
         "//tachyon/zk/plonk/vanishing:vanishing_argument",
     ],

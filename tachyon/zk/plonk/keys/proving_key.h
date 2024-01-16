@@ -12,7 +12,7 @@
 
 #include "tachyon/base/parallelize.h"
 #include "tachyon/zk/base/entities/prover_base.h"
-#include "tachyon/zk/plonk/keys/verifying_key.h"
+#include "tachyon/zk/plonk/halo2/pinned_verifying_key.h"
 #include "tachyon/zk/plonk/permutation/permutation_proving_key.h"
 #include "tachyon/zk/plonk/vanishing/vanishing_argument.h"
 
