@@ -58,12 +58,12 @@ class Synthesizer {
                                     config);
 
         // Parse only indices related to the |current_phase|.
-        const std::vector<Phase>& phases =
-            constraint_system_->challenge_phases();
-        for (size_t j = 0; j < phases.size(); ++i) {
-          if (current_phase != phases[j]) continue;
+        std::vector<Phase> advice_phases =
+            constraint_system_->advice_column_phases();
+        for (size_t j = 0; j < rational_advice_columns.size(); ++j) {
+          if (current_phase != advice_phases[j]) continue;
           const RationalEvals& column = rational_advice_columns[j];
-          std::vector<F> evaluated;
+          std::vector<F> evaluated(column.NumElements());
           CHECK(math::RationalField<F>::BatchEvaluate(column.evaluations(),
                                                       &evaluated));
           // Add blinding factors to advice columns
