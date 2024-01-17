@@ -38,6 +38,9 @@ PermutationArgumentRunner<Poly, Evals>::CommitArgument(
   // will never underflow because of the requirement of at least a degree
   // 3 circuit for the permutation argument.
   CHECK_GE(constraint_system_degree, argument.RequiredDegree());
+  if (argument.columns().empty()) {
+    return {};
+  }
 
   size_t chunk_len = ComputePermutationChunkLength(constraint_system_degree);
   size_t chunk_num = (argument.columns().size() + chunk_len - 1) / chunk_len;
@@ -84,6 +87,7 @@ PermutationEvaluated<Poly>
 PermutationArgumentRunner<Poly, Evals>::EvaluateCommitted(
     ProverBase<PCS>* prover, PermutationCommitted<Poly>&& committed,
     const F& x) {
+  if (committed.product_polys().empty()) return {};
   int32_t blinding_factors =
       static_cast<int32_t>(prover->blinder().blinding_factors());
 
@@ -119,6 +123,7 @@ PermutationArgumentRunner<Poly, Evals>::OpenEvaluated(
     const F& x, crypto::PointSet<F>& points) {
   const std::vector<BlindedPolynomial<Poly>>& product_polys =
       evaluated.product_polys();
+  if (product_polys.empty()) return {};
 
   std::vector<crypto::PolynomialOpening<Poly>> ret;
   ret.reserve(product_polys.size() * 3 - 1);
