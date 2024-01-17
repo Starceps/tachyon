@@ -29,16 +29,24 @@ class UnivariatePolynomialCommitmentScheme
 
   // Commit to |poly| and populates |result| with the commitment.
   // Return false if the degree of |poly| exceeds |kMaxDegree|.
-  [[nodiscard]] bool Commit(const Poly& poly, Commitment* result) const {
-    const Derived* derived = static_cast<const Derived*>(this);
+  [[nodiscard]] bool Commit(const Poly& poly, Commitment* result) {
+    Derived* derived = static_cast<Derived*>(this);
+    if constexpr (VectorCommitmentSchemeTraits<Derived>::kSupportsBatchMode) {
+      if (derived->batch_commitment_state_.batch_mode)
+        return derived->DoCommit(poly, derived->batch_commitment_state_);
+    }
     return derived->DoCommit(poly, result);
   }
 
   // Commit to |poly| and populates |result| with the commitment.
   // Return false if the degree of |poly| exceeds |kMaxDegree|.
-  [[nodiscard]] bool CommitLagrange(const Evals& evals,
-                                    Commitment* result) const {
-    const Derived* derived = static_cast<const Derived*>(this);
+  [[nodiscard]] bool CommitLagrange(const Evals& evals, Commitment* result) {
+    Derived* derived = static_cast<Derived*>(this);
+    if constexpr (VectorCommitmentSchemeTraits<Derived>::kSupportsBatchMode) {
+      if (derived->batch_commitment_state_.batch_mode)
+        return derived->DoCommitLagrange(evals,
+                                         derived->batch_commitment_state_);
+    }
     return derived->DoCommitLagrange(evals, result);
   }
 };

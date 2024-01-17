@@ -47,7 +47,7 @@ TEST_F(PermutationAssemblyTest, GeneratePermutation) {
 }
 
 TEST_F(PermutationAssemblyTest, BuildKeys) {
-  const PCS& pcs = prover_->pcs();
+  PCS& pcs = prover_->pcs();
 
   std::vector<Evals> permutations =
       assembly_.GeneratePermutations(prover_->domain());

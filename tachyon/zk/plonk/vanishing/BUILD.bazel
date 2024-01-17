@@ -68,6 +68,7 @@ tachyon_cc_library(
         ":vanishing_evaluated",
         ":vanishing_utils",
         "//tachyon/base:parallelize",
+        "//tachyon/crypto/commitments:vector_commitment_scheme_traits",
         "//tachyon/crypto/transcripts:transcript",
         "//tachyon/zk/base:prover_query",
         "//tachyon/zk/base/entities:prover_base",

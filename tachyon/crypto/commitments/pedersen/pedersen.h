@@ -29,6 +29,7 @@ class Pedersen final
     : public VectorCommitmentScheme<Pedersen<Point, MaxSize, Commitment>> {
  public:
   using Field = typename Point::ScalarField;
+  using Bucket = typename math::Pippenger<Point>::Bucket;
 
   Pedersen() = default;
   Pedersen(const Point& h, const std::vector<Point>& generators)
@@ -42,6 +43,19 @@ class Pedersen final
 
   const Point& h() const { return h_; }
   const std::vector<Point>& generators() const { return generators_; }
+
+  std::vector<Commitment> GetBatchCommitments() {
+    std::vector<Commitment> batch_commitments;
+    if constexpr (std::is_same_v<Commitment, Bucket>) {
+      batch_commitments = std::move(batch_commitments_);
+    } else {
+      batch_commitments.resize(batch_commitments_.size());
+      CHECK(Bucket::BatchNormalize(batch_commitments_, &batch_commitments));
+      batch_commitments_.clear();
+    }
+    this->batch_commitment_state_.Reset();
+    return batch_commitments;
+  }
 
   // VectorCommitmentScheme methods
   size_t N() const { return generators_.size(); }
@@ -76,8 +90,6 @@ class Pedersen final
   // clang-format on
   bool DoCommit(const std::vector<Field>& v, const Field& r,
                 Commitment* out) const {
-    using Bucket = typename math::Pippenger<Point>::Bucket;
-
     math::VariableBaseMSM<Point> msm;
     Bucket result;
     if (!msm.Run(generators_, v, &result)) return false;
@@ -89,8 +101,20 @@ class Pedersen final
     return true;
   }
 
+  bool DoCommit(const std::vector<Field>& v, const Field& r,
+                BatchCommitmentState& state) {
+    math::VariableBaseMSM<Point> msm;
+    if (batch_commitments_.capacity() != state.batch_count)
+      batch_commitments_.resize(state.batch_count);
+    if (!msm.Run(generators_, v, &batch_commitments_[state.batch_index]))
+      return false;
+    ++state.batch_index;
+    return true;
+  }
+
   Point h_;
   std::vector<Point> generators_;
+  std::vector<Bucket> batch_commitments_;
 };
 
 template <typename Point, size_t MaxSize, typename _Commitment>
@@ -98,6 +122,7 @@ struct VectorCommitmentSchemeTraits<Pedersen<Point, MaxSize, _Commitment>> {
  public:
   constexpr static size_t kMaxSize = MaxSize;
   constexpr static bool kIsTransparent = true;
+  constexpr static bool kSupportsBatchMode = true;
 
   using Field = typename Point::ScalarField;
   using Commitment = _Commitment;

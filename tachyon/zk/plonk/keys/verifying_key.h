@@ -83,7 +83,7 @@ class VerifyingKey : public Key<PCS> {
       load_result->permutations = std::move(permutations);
     }
 
-    const PCS& pcs = entity->pcs();
+    PCS& pcs = entity->pcs();
     // TODO(chokobole): Parallelize this.
     fixed_commitments_ =
         base::Map(pre_load_result.fixed_columns, [&pcs](const Evals& evals) {

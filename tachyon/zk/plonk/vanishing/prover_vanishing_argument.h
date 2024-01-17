@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "tachyon/base/parallelize.h"
+#include "tachyon/crypto/commitments/vector_commitment_scheme_traits_forward.h"
 #include "tachyon/crypto/transcripts/transcript.h"
 #include "tachyon/zk/base/entities/prover_base.h"
 #include "tachyon/zk/base/prover_query.h"
@@ -53,6 +54,7 @@ template <typename PCS, typename ExtendedEvals>
     const VerifyingKey<PCS>& vk, ExtendedEvals& circuit_column,
     VanishingConstructed<PCS>* constructed_out) {
   using F = typename PCS::Field;
+  using Commitment = typename PCS::Commitment;
   using Poly = typename PCS::Poly;
   using Coeffs = typename Poly::Coefficients;
   using ExtendedPoly = typename PCS::ExtendedPoly;
@@ -81,6 +83,9 @@ template <typename PCS, typename ExtendedEvals>
       });
 
   // Compute commitments to each h(X) piece
+  if constexpr (crypto::VectorCommitmentSchemeTraits<PCS>::kSupportsBatchMode) {
+    prover->pcs().SetBatchMode(h_pieces.size());
+  }
   std::vector<bool> results = base::ParallelizeMapByChunkSize(
       h_coeffs, prover->pcs().N(),
       [prover](absl::Span<const F> h_piece, size_t chunk_index) {
@@ -89,6 +94,12 @@ template <typename PCS, typename ExtendedEvals>
   if (std::any_of(results.begin(), results.end(),
                   [](bool result) { return result == false; })) {
     return false;
+  }
+  if constexpr (crypto::VectorCommitmentSchemeTraits<PCS>::kSupportsBatchMode) {
+    std::vector<Commitment> commitments = prover->pcs().GetBatchCommitments();
+    for (const Commitment& commitment : commitments) {
+      if (!prover->GetWriter()->WriteToProof(commitment)) return false;
+    }
   }
 
   // FIXME(TomTaehoonKim): Remove this if possible.

@@ -52,6 +52,10 @@ class SHPlonk final : public UnivariatePolynomialCommitmentScheme<
   explicit SHPlonk(KZG<G1Point, MaxDegree, Commitment>&& kzg)
       : KZGFamily<G1Point, MaxDegree, Commitment>(std::move(kzg)) {}
 
+  std::vector<Commitment> GetBatchCommitments() {
+    return this->kzg_.GetBatchCommitments(this->batch_commitment_state_);
+  }
+
  private:
   friend class VectorCommitmentScheme<SHPlonk<Curve, MaxDegree, Commitment>>;
   friend class UnivariatePolynomialCommitmentScheme<
@@ -62,8 +66,7 @@ class SHPlonk final : public UnivariatePolynomialCommitmentScheme<
   // UnivariatePolynomialCommitmentScheme methods
   template <typename Container>
   [[nodiscard]] bool DoCreateOpeningProof(
-      const Container& poly_openings,
-      TranscriptWriter<Commitment>* writer) const {
+      const Container& poly_openings, TranscriptWriter<Commitment>* writer) {
     PolynomialOpeningGrouper<Poly> grouper;
     grouper.GroupByPolyOracleAndPoints(poly_openings);
 
@@ -343,6 +346,7 @@ struct VectorCommitmentSchemeTraits<SHPlonk<Curve, MaxDegree, _Commitment>> {
  public:
   constexpr static size_t kMaxSize = MaxDegree + 1;
   constexpr static bool kIsTransparent = false;
+  constexpr static bool kSupportsBatchMode = true;
 
   using G1Point = typename Curve::G1Curve::AffinePoint;
   using Field = typename G1Point::ScalarField;

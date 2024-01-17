@@ -41,27 +41,42 @@ class ProverBase : public Entity<PCS> {
     return this->domain_->size() - (blinder_.blinding_factors() + 1);
   }
 
+  // Commit |poly|.
+  // Note that if |this->pcs_.GetBatchMode()| is true, it doesn't write the
+  // commitment to the proof.
   [[nodiscard]] bool Commit(const Poly& poly) {
     Commitment commitment;
     if (!this->pcs_.Commit(poly, &commitment)) return false;
+    if (this->pcs_.GetBatchMode()) return true;
     return GetWriter()->WriteToProof(commitment);
   }
 
+  // Commit |coeffs|.
+  // Note that if |this->pcs_.GetBatchMode()| is true, it doesn't write the
+  // commitment to the proof.
   template <typename Container>
   [[nodiscard]] bool Commit(const Container& coeffs) {
     Commitment commitment;
     if (!this->pcs_.DoCommit(coeffs, &commitment)) return false;
+    if (this->pcs_.GetBatchMode()) return true;
     return GetWriter()->WriteToProof(commitment);
   }
 
+  // Commit |evals|.
+  // Note that if |this->pcs_.GetBatchMode()| is true, it doesn't write the
+  // commitment to the proof.
   [[nodiscard]] bool CommitEvals(const Evals& evals) {
     if (evals.NumElements() != this->domain_->size()) return false;
 
     Commitment commitment;
     if (!this->pcs_.CommitLagrange(evals, &commitment)) return false;
+    if (this->pcs_.GetBatchMode()) return true;
     return GetWriter()->WriteToProof(commitment);
   }
 
+  // Commit |evals| and populate |out| with a blinded polynomial.
+  // Note that if |this->pcs_.GetBatchMode()| is true, it doesn't write the
+  // commitment to the proof.
   [[nodiscard]] bool CommitEvalsWithBlind(const Evals& evals,
                                           BlindedPolynomial<Poly>* out) {
     if (!CommitEvals(evals)) return false;

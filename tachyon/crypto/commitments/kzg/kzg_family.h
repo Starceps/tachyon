@@ -41,9 +41,21 @@ class KZGFamily {
   }
 
   template <typename Container>
+  [[nodiscard]] bool DoCommit(const Container& poly,
+                              BatchCommitmentState& state) {
+    return kzg_.Commit(poly, state);
+  }
+
+  template <typename Container>
   [[nodiscard]] bool DoCommitLagrange(const Container& poly,
                                       Commitment* commitment) const {
     return kzg_.CommitLagrange(poly, commitment);
+  }
+
+  template <typename Container>
+  [[nodiscard]] bool DoCommitLagrange(const Container& poly,
+                                      BatchCommitmentState& state) {
+    return kzg_.CommitLagrange(poly, state);
   }
 
   [[nodiscard]] bool DoCommit(
@@ -52,10 +64,22 @@ class KZGFamily {
     return kzg_.Commit(poly.coefficients().coefficients(), commitment);
   }
 
+  [[nodiscard]] bool DoCommit(
+      const math::UnivariateDensePolynomial<F, MaxDegree>& poly,
+      BatchCommitmentState& state) {
+    return kzg_.Commit(poly.coefficients().coefficients(), state);
+  }
+
   [[nodiscard]] bool DoCommitLagrange(
       const math::UnivariateEvaluations<F, MaxDegree>& evals,
       Commitment* commitment) const {
     return kzg_.CommitLagrange(evals.evaluations(), commitment);
+  }
+
+  [[nodiscard]] bool DoCommitLagrange(
+      const math::UnivariateEvaluations<F, MaxDegree>& evals,
+      BatchCommitmentState& state) {
+    return kzg_.CommitLagrange(evals.evaluations(), state);
   }
 
  protected:

@@ -80,8 +80,8 @@ class PermutationAssembly {
 
   // Returns |PermutationVerifyingKey| which has commitments for permutations.
   constexpr PermutationVerifyingKey<PCS> BuildVerifyingKey(
-      const Entity<PCS>* entity, const std::vector<Evals>& permutations) const {
-    const PCS& pcs = entity->pcs();
+      Entity<PCS>* entity, const std::vector<Evals>& permutations) const {
+    PCS& pcs = entity->pcs();
     return PermutationVerifyingKey<PCS>(
         base::Map(permutations, [&pcs](const Evals& permutation) {
           Commitment commitment;

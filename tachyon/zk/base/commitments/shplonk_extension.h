@@ -8,7 +8,9 @@
 #define TACHYON_ZK_BASE_COMMITMENTS_SHPLONK_EXTENSION_H_
 
 #include <utility>
+#include <vector>
 
+#include "tachyon/crypto/commitments/batch_commitment_state.h"
 #include "tachyon/crypto/commitments/kzg/shplonk.h"
 #include "tachyon/zk/base/commitments/univariate_polynomial_commitment_scheme_extension.h"
 
@@ -42,6 +44,10 @@ class SHPlonkExtension final
 
   size_t D() const { return N() - 1; }
 
+  std::vector<Commitment> GetBatchCommitments() {
+    return shplonk_.GetBatchCommitments();
+  }
+
   [[nodiscard]] bool DoUnsafeSetup(size_t size) {
     return shplonk_.DoUnsafeSetup(size);
   }
@@ -55,13 +61,29 @@ class SHPlonkExtension final
     return shplonk_.DoCommit(v, out);
   }
 
+  template <typename BaseContainer>
+  [[nodiscard]] bool DoCommit(const BaseContainer& v,
+                              crypto::BatchCommitmentState& state) {
+    return shplonk_.DoCommit(v, state);
+  }
+
   [[nodiscard]] bool DoCommit(const Poly& poly, Commitment* out) const {
     return shplonk_.DoCommit(poly, out);
+  }
+
+  [[nodiscard]] bool DoCommit(const Poly& poly,
+                              crypto::BatchCommitmentState& state) {
+    return shplonk_.DoCommit(poly, state);
   }
 
   [[nodiscard]] bool DoCommitLagrange(const Evals& evals,
                                       Commitment* out) const {
     return shplonk_.DoCommitLagrange(evals, out);
+  }
+
+  [[nodiscard]] bool DoCommitLagrange(const Evals& evals,
+                                      crypto::BatchCommitmentState& state) {
+    return shplonk_.DoCommitLagrange(evals, state);
   }
 
   template <typename BaseContainer>
@@ -70,9 +92,15 @@ class SHPlonkExtension final
     return shplonk_.DoCommitLagrange(v, out);
   }
 
+  template <typename BaseContainer>
+  [[nodiscard]] bool DoCommitLagrange(const BaseContainer& v,
+                                      crypto::BatchCommitmentState& state) {
+    return shplonk_.DoCommitLagrange(v, state);
+  }
+
   template <typename Container, typename Proof>
   [[nodiscard]] bool DoCreateOpeningProof(const Container& poly_openings,
-                                          Proof* proof) const {
+                                          Proof* proof) {
     return shplonk_.DoCreateOpeningProof(poly_openings, proof);
   }
 
@@ -110,6 +138,7 @@ struct VectorCommitmentSchemeTraits<
 
   constexpr static size_t kMaxSize = MaxDegree + 1;
   constexpr static bool kIsTransparent = false;
+  constexpr static bool kSupportsBatchMode = true;
 };
 
 }  // namespace crypto

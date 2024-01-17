@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "tachyon/base/containers/container_util.h"
+#include "tachyon/crypto/commitments/vector_commitment_scheme_traits_forward.h"
 #include "tachyon/zk/base/entities/prover_base.h"
 #include "tachyon/zk/plonk/constraint_system.h"
 #include "tachyon/zk/plonk/prover/witness_collection.h"
@@ -24,6 +25,7 @@ class Synthesizer {
   using Poly = typename PCS::Poly;
   using Evals = typename PCS::Evals;
   using RationalEvals = typename PCS::RationalEvals;
+  using Commitment = typename PCS::Commitment;
 
   Synthesizer() = default;
   Synthesizer(size_t num_circuits, const ConstraintSystem<F>* constraint_system)
@@ -60,6 +62,10 @@ class Synthesizer {
         // Parse only indices related to the |current_phase|.
         const std::vector<Phase>& phases =
             constraint_system_->challenge_phases();
+        if constexpr (crypto::VectorCommitmentSchemeTraits<
+                          PCS>::kSupportsBatchMode) {
+          prover->pcs().SetBatchMode(phases.size());
+        }
         for (size_t j = 0; j < phases.size(); ++i) {
           if (current_phase != phases[j]) continue;
           const RationalEvals& column = rational_advice_columns[j];
@@ -73,6 +79,14 @@ class Synthesizer {
           CHECK(prover->CommitEvals(evaluated_evals));
           SetAdviceColumn(i, j, std::move(evaluated_evals),
                           prover->blinder().Generate());
+        }
+        if constexpr (crypto::VectorCommitmentSchemeTraits<
+                          PCS>::kSupportsBatchMode) {
+          std::vector<Commitment> commitments =
+              prover->pcs().GetBatchCommitments();
+          for (const Commitment& commitment : commitments) {
+            CHECK(prover->GetWriter()->WriteToProof(commitment));
+          }
         }
       }
       UpdateChallenges(prover, current_phase);
