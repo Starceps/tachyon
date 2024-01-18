@@ -79,13 +79,29 @@ class Synthesizer {
     }
   }
 
-  // Return |challenge_| as a vector.
+  // Return |challenge_| as a vector instead of |btree_map|.
   std::vector<F> ExportChallenges() {
     return base::Map(
         std::make_move_iterator(challenges_.begin()),
         std::make_move_iterator(challenges_.end()),
         [](std::pair<size_t, F>&& item) { return std::move(item.second); });
   }
+
+  // Return |challenge_| as a vector instead of |btree_map| and then clear it.
+  std::vector<F> TakeChallenges() {
+    std::vector<F> challenges = base::Map(
+        std::make_move_iterator(challenges_.begin()),
+        std::make_move_iterator(challenges_.end()),
+        [](std::pair<size_t, F>&& item) { return std::move(item.second); });
+    challenges_.clear();
+    return challenges;
+  }
+  std::vector<std::vector<Evals>>&& TakeAdviceColumnsVec() && {
+    return std::move(advice_columns_vec_);
+  };
+  std::vector<std::vector<F>>&& TakeAdviceBlindsVec() && {
+    return std::move(advice_blinds_vec_);
+  };
 
  private:
   void SetAdviceColumn(size_t circuit_idx, size_t column_idx, Evals&& column,
